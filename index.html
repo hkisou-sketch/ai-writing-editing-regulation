@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>AIっぽい文章の編集レギュレーション（暫定版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Old+Mincho:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#ffffff; --paper-2:#f5f7f9; --ink:#1d2228; --ink-2:#59616b; --rule:#e2e6ea;
+  --ai:#234a7a; --ai-wash:#e8f0fa; --shu:#bf3a22; --shu-wash:#fbebe7;
+  --mincho:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif;
+  --gothic:"BIZ UDPGothic","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#15181c; --paper-2:#1c2026; --ink:#e6e8eb; --ink-2:#a4acb6; --rule:#2b3139;
+    --ai:#93b6ea; --ai-wash:rgba(147,182,234,.14); --shu:#f2907a; --shu-wash:rgba(242,144,122,.13);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15181c; --paper-2:#1c2026; --ink:#e6e8eb; --ink-2:#a4acb6; --rule:#2b3139;
+  --ai:#93b6ea; --ai-wash:rgba(147,182,234,.14); --shu:#f2907a; --shu-wash:rgba(242,144,122,.13);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--gothic);font-size:16.5px;line-height:1.95;letter-spacing:.02em;-webkit-text-size-adjust:100%}
+a{color:var(--ai)}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--ai);outline-offset:3px;border-radius:2px}
+
+/* ---------- 冒頭 ---------- */
+.top{max-width:1120px;margin:0 auto;padding:56px 24px 40px}
+.top h1{font-family:var(--mincho);font-weight:700;font-size:clamp(28px,4.6vw,44px);line-height:1.4;letter-spacing:.04em;margin:0 0 18px}
+.top h1 .nw{display:inline-block}
+.meta{display:flex;flex-wrap:wrap;gap:6px 22px;color:var(--ink-2);font-size:14px;margin:0 0 28px}
+.meta span{white-space:nowrap}
+.lead{max-width:38em;margin:0 0 36px}
+
+/* 冒頭の赤入れ（ページ唯一の動き） */
+.hero-proof{max-width:44em;background:var(--paper-2);border-radius:6px;padding:22px 24px 18px}
+.hero-proof .row p{font-size:clamp(16px,2.2vw,19px);font-family:var(--mincho);font-weight:600;line-height:1.9}
+.hero-proof figcaption{margin-top:10px}
+@media (prefers-reduced-motion: no-preference){
+  .hero-proof del{background-image:linear-gradient(var(--shu),var(--shu));background-size:0% 2px;background-repeat:no-repeat;background-position:0 55%;text-decoration:none;animation:strike .9s .5s ease-out forwards}
+  .hero-proof .row.after{opacity:0;animation:appear .6s 1.5s ease-out forwards}
+  @keyframes strike{to{background-size:100% 2px}}
+  @keyframes appear{to{opacity:1}}
+}
+
+/* ---------- レイアウト ---------- */
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:14px;line-height:1.7;padding-top:6px}
+nav.toc ol{list-style:none;margin:0;padding:0}
+nav.toc li{margin:0 0 10px}
+nav.toc a{color:var(--ink-2);text-decoration:none;display:block;padding-left:12px;border-left:2px solid transparent}
+nav.toc a:hover{color:var(--ink)}
+nav.toc a[aria-current="true"]{color:var(--ink);border-left-color:var(--ai)}
+details.toc-m{display:none}
+main{min-width:0;max-width:40em}
+
+section{padding-top:24px;margin-bottom:56px}
+h2{font-family:var(--mincho);font-weight:700;font-size:28px;line-height:1.5;letter-spacing:.04em;margin:0 0 20px}
+h3{font-family:var(--mincho);font-weight:700;font-size:20.5px;line-height:1.6;margin:44px 0 10px}
+h4{font-size:16.5px;font-weight:700;margin:28px 0 6px}
+p{margin:0 0 1em}
+.muted{color:var(--ink-2)}
+.group-title{font-family:var(--mincho);font-weight:700;font-size:15px;color:var(--ink-2);margin:40px 0 -24px;letter-spacing:.08em}
+
+/* 見る順番（実際に順番があるので番号を使う） */
+ol.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+ol.steps>li{counter-increment:s;position:relative;padding-left:52px;margin:0 0 34px}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:-2px;font-family:var(--mincho);font-weight:700;font-size:30px;line-height:1;color:var(--ai)}
+ol.steps h3{margin-top:0}
+
+/* 赤入れの例 */
+figure.proof{margin:16px 0 20px;background:var(--paper-2);border-radius:6px;padding:14px 18px 12px}
+.row{display:grid;grid-template-columns:2em minmax(0,1fr);align-items:baseline}
+.row+.row{margin-top:6px}
+.row .mk{font-family:var(--mincho);font-weight:700;font-size:14px;color:var(--ink-2)}
+.row p{margin:0;line-height:1.85}
+del{color:var(--shu);text-decoration:line-through;text-decoration-thickness:1.5px;background:var(--shu-wash);border-radius:2px;padding:0 1px}
+ins{color:var(--ink);text-decoration:none;background:var(--ai-wash);border-bottom:2px solid var(--ai);padding:0 1px}
+figure.proof figcaption{font-size:13.5px;color:var(--ink-2);line-height:1.7;margin-top:8px}
+
+.ok{margin:14px 0 18px}
+.ok b{font-weight:700;color:var(--ai)}
+.data{font-family:var(--mincho);font-weight:700;font-size:22px;color:var(--ai)}
+
+/* 表 */
+.tbl{overflow-x:auto;margin:14px 0 22px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px;line-height:1.7}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--rule)}
+th{font-weight:700;color:var(--ink-2);font-size:13.5px}
+
+/* なぜ */
+dl.why{margin:0}
+dl.why dt{font-weight:700;margin-top:16px}
+dl.why dd{margin:2px 0 0}
+
+/* チェックリスト */
+.check h3{margin-top:30px}
+.check ul{list-style:none;margin:0;padding:0}
+.check li{margin:0 0 8px}
+.check label{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:start;cursor:pointer}
+.check input{width:18px;height:18px;margin:6px 0 0;accent-color:var(--ai)}
+.check input:checked+span{color:var(--ink-2);text-decoration:line-through;text-decoration-color:var(--ink-2)}
+.check-bar{display:flex;align-items:center;gap:16px;margin-top:22px;font-size:14px;color:var(--ink-2)}
+button.reset{font:inherit;font-size:14px;color:var(--ai);background:none;border:1px solid var(--rule);border-radius:4px;padding:6px 14px;cursor:pointer}
+button.reset:hover{border-color:var(--ai)}
+
+footer{max-width:1120px;margin:0 auto;padding:28px 24px 48px;border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink-2)}
+
+/* ---------- スマートフォン ---------- */
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:0}
+  nav.toc{display:none}
+  details.toc-m{display:block;margin:0 0 24px;border:1px solid var(--rule);border-radius:6px;padding:10px 16px;font-size:14.5px}
+  details.toc-m summary{cursor:pointer;font-weight:700}
+  details.toc-m ol{margin:8px 0 4px;padding-left:1.4em;line-height:2}
+  details.toc-m a{text-decoration:none}
+  .top{padding-top:36px}
+  body{font-size:16px}
+  ol.steps>li{padding-left:40px}
+  ol.steps>li::before{font-size:26px}
+}
+@media print{
+  nav.toc,details.toc-m,.check-bar{display:none}
+  .wrap{grid-template-columns:1fr}
+  .hero-proof .row.after{opacity:1!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1><span class="nw">AIっぽい文章の</span><span class="nw">編集レギュレーション</span></h1>
+  <p class="meta"><span>暫定版</span><span>2026年10月28日</span><span>株式会社IDEATECH 社内向け</span></p>
+  <p class="lead">AIが書いた原稿を、IDEATECHの基準で読める文章に直すときの判断のよりどころをまとめた。ガイドブック、ホワイトペーパー、白書、調査リリース、提案資料など、社外に出る文章すべてが対象である。直すかどうかは、読み手にとって読みにくいかどうかで決める。</p>
+  <figure class="proof hero-proof" aria-label="修正例">
+    <div class="row before"><span class="mk">前</span><p>自動チェック機能と運用の手順<del>をセットで設計することが、通知の放置を防ぎスムーズな処理を実現する鍵となります。</del></p></div>
+    <div class="row after"><span class="mk">後</span><p>自動チェック機能と運用の手順<ins>は、セットで設計します。</ins></p></div>
+    <figcaption>段落の最後で「大事だ」と言い直す一文は、読み手に新しい情報を渡さない。何をするのかを書けば足りる。</figcaption>
+  </figure>
+</header>
+
+<div class="wrap">
+  <nav class="toc" aria-label="目次">
+    <ol>
+      <li><a href="#principles">基本の考え方</a></li>
+      <li><a href="#order">見る順番</a></li>
+      <li><a href="#patterns">言い回しの型</a></li>
+      <li><a href="#notation">IDEATECHの表記</a></li>
+      <li><a href="#overfix">直しすぎに注意</a></li>
+      <li><a href="#roles">AIと人の分担</a></li>
+      <li><a href="#why">AIっぽくなる理由</a></li>
+      <li><a href="#checklist">提出前チェックリスト</a></li>
+      <li><a href="#related">関連する社内文書</a></li>
+      <li><a href="#next">今後確かめること</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <details class="toc-m">
+      <summary>目次</summary>
+      <ol>
+        <li><a href="#principles">基本の考え方</a></li>
+        <li><a href="#order">見る順番</a></li>
+        <li><a href="#patterns">言い回しの型</a></li>
+        <li><a href="#notation">IDEATECHの表記</a></li>
+        <li><a href="#overfix">直しすぎに注意</a></li>
+        <li><a href="#roles">AIと人の分担</a></li>
+        <li><a href="#why">AIっぽくなる理由</a></li>
+        <li><a href="#checklist">提出前チェックリスト</a></li>
+        <li><a href="#related">関連する社内文書</a></li>
+        <li><a href="#next">今後確かめること</a></li>
+      </ol>
+    </details>
+
+    <!-- 基本の考え方 -->
+    <section id="principles">
+      <h2>基本の考え方</h2>
+
+      <h3>直す基準は「読みにくいかどうか」</h3>
+      <p>書き手は毎日のようにAIの文章を読むので、AIっぽい言い回しに敏感になる。読み手はそこまで多く読んでいない。そのため「AIっぽい」と感じる読み手は少ないが、「読みにくい」はどの読み手も感じる。直すかどうかは、その表現が読みにくさにつながっているかで決める。</p>
+
+      <h3>見飽きたのか、読みにくいのか</h3>
+      <p>「単に〜だけでは」のような言い方は、数が多いと書き手は飽きる。ただ、一度通読するだけの読み手にはそれほど引っかからない。これは数を減らせば足りる。</p>
+      <p>一方で、「〜が不可欠です」のように新しい情報のない文が段落ごとに来ると、読み手は段落の最後を読み飛ばすようになり、本当に大事な一文まで飛ばされる。こちらは直す。</p>
+
+      <h3>構成が先、言い回しは後</h3>
+      <p>読みやすさを一番左右するのは構成である。構成ができていれば、多少AIっぽさが残っても読み物として成り立つ。反対に、言い回しをいくら整えても、見出しと本文がずれていたり数字の主語を取り違えていたりすれば、読み手の信頼は戻らない。</p>
+
+      <h3>一律に直さない</h3>
+      <p>気になる表現のリストを渡して直させると、AIは同じ型を一律に拾って直す。その結果もまた、人が選ばない文章になる。数を絞って使えば読み手の印象に残る表現もあり、どこまで残すかの温度感は書き手によって違う。最後に決めるのは人である。</p>
+    </section>
+
+    <!-- 見る順番 -->
+    <section id="order">
+      <h2>見る順番</h2>
+      <p>原稿は次の順に見る。上の段ほど、間違えたときに読み手の信頼を失いやすく、AIが自分では気づきにくい。</p>
+      <ol class="steps">
+        <li>
+          <h3>事実と数字</h3>
+          <p>数字の主語（人か企業か事業所か）、合計と内訳、選択肢の文言、「最多」などの評価語、調査で示せる範囲を超えた言い切りを確かめる。</p>
+          <figure class="proof">
+            <div class="row"><span class="mk">前</span><p>「不備・差戻しの判断基準が文書化されている」と<del>回答した企業はわずか</del>28.4%にとどまっています。</p></div>
+            <div class="row"><span class="mk">後</span><p>「不備・差戻しの判断基準が文書化されている」と<ins>答えた人は</ins>28.4%にとどまっています。</p></div>
+            <figcaption>例：レポピー原稿。回答者は個人141名で、企業ではない。主語を取り違えると数字の意味が変わる。</figcaption>
+          </figure>
+          <figure class="proof">
+            <div class="row"><span class="mk">前</span><p>「誰で検証し、何を変え、声が審査で使われたか」を軸にしたもの<del>はない</del>。</p></div>
+            <div class="row"><span class="mk">後</span><p>「誰で検証し、何を変え、声が審査で使われたか」を軸にしたもの<ins>は、今回の検索範囲では確認できなかった</ins>。</p></div>
+            <figcaption>例：IDEAインサイトレポート。同じ資料のほかの箇所の言い方にそろえ、根拠の強さに合わせた。</figcaption>
+          </figure>
+        </li>
+        <li>
+          <h3>構成</h3>
+          <p>見出しと本文の中身、目次・リード文・変更点メモとの一致、削った語句が残した文の参照先になっていないかを確かめる。言い回しを直したあとほど、ずれが残りやすい。</p>
+          <ul>
+            <li>目次は「五つの基準」「棚卸しから」のまま、本文の見出しは「5つの基準」「棚卸から」になっていた。</li>
+            <li>本文から差戻し割合の記述を削ったのに、見出しに「割合と」が残っていた。</li>
+            <li>「5章で決めた成果を」を削った結果、次の「同じ判断軸」が何と同じなのか読めなくなった。</li>
+          </ul>
+        </li>
+        <li>
+          <h3>見出し</h3>
+          <p>斜め読みする人でも、見出しを拾うだけで中身がわかるようにする。カッコつけた言い方、比喩、名詞を並べただけの見出しは外す。</p>
+          <figure class="proof">
+            <div class="row"><span class="mk">前</span><p><del>判断の境界を動かす</del></p></div>
+            <div class="row"><span class="mk">後</span><p><ins>判断を記録し基準に変えていく</ins></p></div>
+            <figcaption>例：ガイドブック原稿の見出し。「境界を動かす」は書き手の頭の中の比喩で、何をするのかが伝わらない。</figcaption>
+          </figure>
+        </li>
+        <li>
+          <h3>言い回し</h3>
+          <p>次の「言い回しの型」で見る。1〜3が済んでから手を付ける。</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- 言い回しの型 -->
+    <section id="patterns">
+      <h2>言い回しの型</h2>
+      <p>どれも1か所だけなら問題にならないことが多い。同じ型が重なると、読み手は段落の終わりを読み飛ばしたり、調子を単調に感じたりするようになる。</p>
+
+      <p class="group-title">言葉</p>
+
+      <h3>概念語と比喩</h3>
+      <p>「構造」「論点」「打ち手」「境界」「線を引く」「器」「土俵」「縁」「〜は消え」「中核」など。AIはコンセプトめいた名詞や動きのある比喩で文を締めたがる。読み手が会議で口にする言葉に戻す。目安は、構造→要因・理由・傾向、打ち手→対策。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p><del>構造別の打ち手</del></p></div>
+        <div class="row"><span class="mk">後</span><p><ins>負荷の要因別の対策</ins></p></div>
+        <figcaption>例：ガイドブック原稿の見出し</figcaption>
+      </figure>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>実績件数やスピード<del>の土俵では、後発は負ける</del>。</p></div>
+        <div class="row"><span class="mk">後</span><p>実績件数やスピード<ins>で比べられると、後発は不利になる</ins>。</p></div>
+        <figcaption>例：IDEAインサイトレポート</figcaption>
+      </figure>
+      <p>「中核」「核心」「本質」「根幹」のように、大事だと言いたいだけの名詞も同じ扱いにする。前後で中身が言えていれば削り、言えていなければ中身を書く。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>思考や判断を伴う<del>審査の中核部分</del>に負荷が集中しています。</p></div>
+        <div class="row"><span class="mk">後</span><p>思考や判断を伴う<ins>作業</ins>に負荷が集中しています。</p></div>
+        <figcaption>例：レポピー原稿。中身は「思考や判断を伴う」ですでに言えている。</figcaption>
+      </figure>
+      <p class="ok"><b>使ってよい場合</b>　本文の中で定義した用語は使ってよい。白書で定義した「経営者格」などがこれにあたる。白書の結論で言い切る場面の「核心」（「その育成・確保こそが、成長戦略の核心なのである」）も使ってよい。</p>
+      <p class="ok"><b>「論点」と「構造」</b>　本当にその意味で使うなら残す。論点は、意見が分かれていて決める必要があることを指すとき（打ち合わせで決める論点、ルールメイクで市場に出す論点）。構造は、費用構造や業界構造のように仕組みそのものを指すとき。どちらも1本の原稿で何度も出てくる言葉ではないので、頻繁に出ていたら見直す。</p>
+
+      <h3>効果をぼかす言葉</h3>
+      <p>「効く」「刺さる」「響く」「勝ち筋が見えた」「解像度が上がる」「腹落ちする」「武器になる」など。うまくいくことは伝わるが、誰の何がどう変わるのかが書かれていない。マーケティングやコンサルの業界語でもあるため書き手は違和感を持ちにくく、AIもよく使う。社外に出る原稿では、起きる変化を書く。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p><del>同じ型が重なったとき、読み手に効いてくる。</del></p></div>
+        <div class="row"><span class="mk">後</span><p><ins>同じ型が重なると、読み手は段落の終わりを読み飛ばしたり、調子を単調に感じたりするようになる。</ins></p></div>
+        <figcaption>例：このレギュレーションの初版。書いた側も、何が起きるのかを言葉にしないまま「効く」を使っていた。</figcaption>
+      </figure>
+      <p class="ok"><b>使ってよい場合</b>　取材相手やキックオフでの発言をそのまま引用するとき（「最近刺さっている」など）。社内のメモや打ち合わせで使うのも問題ない。</p>
+
+      <h3>場所や流れに見立てた動詞</h3>
+      <p>「コンテンツを置く」「論点を前に置く」「受け皿に流す」「コンテンツを効かせる」など。文章や施策を棚や水路に見立てた言い方で、普段の会話ではまず使わない。実際に何をするのか（書く、載せる、配信する、渡す、使う）を、そのままの動詞で書く。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>分割してメルマガ・ウェビナー・CxOレター・展示会<del>に流す</del>。</p></div>
+        <div class="row"><span class="mk">後</span><p>分割して<ins>、</ins>メルマガ・ウェビナー・CxOレター・展示会<ins>で使う</ins>。</p></div>
+        <figcaption>例：IDEAインサイトレポート</figcaption>
+      </figure>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>お手元にある資料を見ながら、<del>置き方</del>の仮案まで一緒に作ります。</p></div>
+        <div class="row"><span class="mk">後</span><p>お手元にある資料を見ながら、<ins>使い分け</ins>の仮案まで一緒に作ります。</p></div>
+        <figcaption>例：セミナー参加者向けメルマガ</figcaption>
+      </figure>
+      <p class="ok"><b>使ってよい場合</b>　展示会のブースに資料を置くなど、実際に物を置く場面。</p>
+
+      <h3>強すぎる修飾</h3>
+      <p>「劇的に」「泥臭い」「真の」「根本」「絶対に」「確実に」「厳格に」「〜にほかなりません」など。強い言葉が重なると、かえって中身が軽く見える。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>システムによる形式チェックを導入しても、現場の負担<del>が劇的に減るわけではありません。本当に時間が奪われているのは</del>、〜<del>泥臭い調査・思考作業</del>だからです。</p></div>
+        <div class="row"><span class="mk">後</span><p>システムによる形式チェックを導入しても、現場の負担<ins>はそれほど減りません。時間がかかっているのは</ins>、〜<ins>調べものや考える作業</ins>だからです。</p></div>
+        <figcaption>例：レポピー原稿</figcaption>
+      </figure>
+
+      <h3>記号</h3>
+      <p>ダッシュ、スラッシュ、強調のための引用符。スラッシュは言葉どうしの関係（並列か、選択か、順序か）をあいまいにする。並列なら「・」か「と」にする。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>〜コンプライアンスリスクは<del>絶対に</del>防がなければならない<del>―</del>。</p></div>
+        <div class="row"><span class="mk">後</span><p>〜コンプライアンスリスクは防がなければならない。</p></div>
+        <figcaption>例：レポピー原稿の「はじめに」</figcaption>
+      </figure>
+      <p class="ok"><b>使ってよい場合</b>　乱用しなければよい。強調したい1か所に絞るなら、ダッシュも強調の引用符も使ってよい。調査の選択肢を並べるときのスラッシュ（「社内／外部支援／担当者任せ」）は問題ない。</p>
+
+      <p class="group-title">文</p>
+
+      <h3>否定から入る</h3>
+      <p>「〜ではなく」「単に〜だけでは」「〜わけではありません」「足りないのは〜ではなく」。英語の It’s not A, it’s B. の型で、比べる相手がいない場面にも否定から書いてしまう。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p><del>「会えたか」ではなく、</del>誰に会い、何を変え、その声が審査で使われたか。</p></div>
+        <div class="row"><span class="mk">後</span><p><ins>見るべきは会えたかどうかより、</ins>誰に会い、何を変え、その声が審査で使われたか。</p></div>
+        <figcaption>例：IDEAインサイトレポート</figcaption>
+      </figure>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>会えていないのは、<del>会う気がないからではなく、</del>会う時間が残っていないから。</p></div>
+        <div class="row"><span class="mk">後</span><p>会えていないのは、会う時間が残っていないから。</p></div>
+        <figcaption>例：IDEAインサイトレポート。誰も言っていない「会う気がない」を持ち出して否定していた。</figcaption>
+      </figure>
+      <p class="ok"><b>使ってよい場合</b>　読み手が実際に持っている思い込みを正すとき。1つの節に1回程度に絞る。たとえば「AIは自動決定を行うのではなく、判断材料を人に示すアシスタントとして位置づける」は残した。</p>
+
+      <h3>短文で溜めて「この」で受ける</h3>
+      <p>短い文で切って溜めを作り、次の文を「この」「これが」で受ける。定義から入る「〜には二つの要素があります。〜です。」も同じ仲間である。一文にまとめるか、目的から書く。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>作業の実行だけでなく、その前後まで支えられるか<del>。この視点から、事業者を選ぶときに確かめたい点を五つに整理します</del>。</p></div>
+        <div class="row"><span class="mk">後</span><p>作業の実行だけでなく、その前後まで支えられるか<ins>という視点から基準を見ていきます</ins>。</p></div>
+        <figcaption>例：ガイドブック原稿</figcaption>
+      </figure>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>制度は回っている<del>。止まるのは採択の後</del>。</p></div>
+        <div class="row"><span class="mk">後</span><p>制度は回っている<ins>が、案件は採択の後に止まる</ins>。</p></div>
+        <figcaption>例：IDEAインサイトレポートの調査ストーリー</figcaption>
+      </figure>
+      <p class="ok"><b>使ってよい場合</b>　読み手が次に知りたいことを先回りする問い（「では社内には何を残していくのか。それは〜」）は使ってよい。指示語も、指す先が1つに決まるなら使ってよい。</p>
+
+      <h3>文の長さがそろう</h3>
+      <p>ある原稿では、本文の129文のうち97文が30〜69字に収まり、30字未満の文は3つしかなかった。短く言い切る文がないと、どこが大事なのかが読み手に伝わらない。</p>
+      <p><span class="data">97 / 129</span>　<span class="muted">30〜69字に収まった文の数（レポピー原稿）</span></p>
+      <p>要所で短く言い切る。ただし機械的に文を切ると、今度はぶつ切りになる。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p><del>AIが作成した文章を必ず人間が確認・承認してから送信するフローを徹底することで、未確定な不備の誤送信や誤案内を確実に防ぎます。</del></p></div>
+        <div class="row"><span class="mk">後</span><p><ins>AIが作成した文章は、必ず人が確認・承認してから送信します。未確定な不備の誤送信や誤案内を防ぐためです。</ins></p></div>
+        <figcaption>例：レポピー原稿。手順と理由を分けると、短い文が自然に入る。</figcaption>
+      </figure>
+      <p>抑揚は、短い文だけでなく長い文からも生まれる。100字を超える文をあえて混ぜ、そのあとを短い文で受けると、調子の差がはっきりする。長い文を残すか分けるかは、主張の数で決める。主張が1つで前から順に読めるなら残し、主張が入れ子になっていれば分ける。データの列挙や出来事の経緯は、長くても読めることが多い。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">例</span><p>過去1年間に担当者間で差戻し判断が分かれた頻度を聞いた調査では、「月に1回以上」が28.4%、「数か月に1回程度」が32.6%、「年に1〜2回程度」が12.1%となり、経験者は計73.1%に達しました。</p></div>
+        <figcaption>例：レポピー原稿（101字）。数字を順に並べて合計で締めるので、長くても読める。このまま残す。</figcaption>
+      </figure>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p><del>「確認に時間がかかる」という課題に対し、読む「分量」が原因なのか、照合する「根拠の探索」が原因なのか、あるいは「案内作成の手間」なのかを特定すると、受付側の入力制御で防ぐのか、審査をAIで支援するのかが決まります。</del></p></div>
+        <div class="row"><span class="mk">後</span><p><ins>「確認に時間がかかる」原因が、読む分量なのか、照合する根拠の探索なのか、案内作成の手間なのかを特定します。それによって、受付側の入力制御で防ぐのか、審査をAIで支援するのかが決まります。</ins></p></div>
+        <figcaption>例：レポピー原稿（107字）。「〜のか」の問いが2組重なっているため、原因を特定する文と、対策が決まる文に分けた。</figcaption>
+      </figure>
+      <p class="ok"><b>編集ルールとの使い分け</b>　「AI文章 編集ルール」の参考値（一文の平均は60字前後、大きく超える文に印を付ける）はそのまま使う。印が付いた長い文のうち、主張が1つのものは残す。</p>
+
+      <h3>文末が単調になる</h3>
+      <p>「〜できます」「〜します」が続くと、素っ気ない文章になる。「〜が可能です」「〜となります」「〜しましょう」「〜してみてください」も混ぜる。目的は単調さを崩すことにある。「〜が可能です」を増やしすぎると、今度は回りくどい述語が目立つ。</p>
+
+      <h3>接続詞</h3>
+      <p>論理がしっかりしていれば、接続詞がなくても読める。それでもリズムのために入れたい場面はあり、入れてよい。文と文の関係が読み取れない箇所には足す。別の話を「で、」でつながない。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p><del>対して</del>「事業方針や制度の最終決定」は〜</p></div>
+        <div class="row"><span class="mk">後</span><p><ins>これに対して</ins>「事業方針や制度の最終決定」は〜</p></div>
+        <figcaption>例：ガイドブック原稿</figcaption>
+      </figure>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>〜整えていると答えた人は9.9％<del>で、</del>基準は更新しなければ古くなります。</p></div>
+        <div class="row"><span class="mk">後</span><p>〜整えていると答えた人は9.9％<ins>です。（改段落）判断</ins>基準は更新しなければ古くなります。</p></div>
+        <figcaption>例：ガイドブック原稿</figcaption>
+      </figure>
+
+      <h3>読点</h3>
+      <p>文節の区切りごとに打たず、音読して自然に息を継ぐ位置に打つ。短い主語や条件のあと（〜は、〜ても、〜れば、〜ほど、）の読点と、見出しの読点は取る。接続詞のあとは打つが、すぐ後に別の読点が来るなら省く。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>多くの管理職は<del>、</del>すでに業務のどこかを〜</p></div>
+        <div class="row"><span class="mk">後</span><p>多くの管理職はすでに業務のどこかを〜</p></div>
+        <figcaption>例：ガイドブック原稿</figcaption>
+      </figure>
+
+      <p class="group-title">段落と文章全体</p>
+
+      <h3>段落末の言い直し</h3>
+      <p>「〜が不可欠です」「〜が重要です」「〜の鍵となります」「〜が第一歩となります」「〜すれば〜できます」。冒頭と呼応させる一文や、念押しの但し書きも同じである。新しい情報がないので削るか、何をするのかを直接書く。ある原稿では、この型だけで20か所を超えていた。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p>同じ項目を委託後にも測れば、効果を比べられます。</p></div>
+        <div class="row"><span class="mk">後</span><p class="muted">（一文ごと削除）</p></div>
+        <figcaption>例：ガイドブック原稿。段落の中ですでに述べた内容の言い直し。</figcaption>
+      </figure>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p><del>日々の審査でボトルネックとなっている工程や、担当者間で判断が分かれる業務を整理することが、改善に向けた第一歩となります。</del></p></div>
+        <div class="row"><span class="mk">後</span><p><ins>まずは、日々の審査で時間がかかっている工程や、担当者間で判断が分かれる業務を整理するところから始めてみてください。</ins></p></div>
+        <figcaption>例：レポピー原稿の締め</figcaption>
+      </figure>
+
+      <h3>同じ型の繰り返し</h3>
+      <p>1本の原稿に「〜して初めて」が4回、1つの資料に「空いているのは」が3回出ていた。1回なら気にならない型も、続くと型そのものが見えてしまう。目安として、同じ型が1つの節に2回以上出たら印を付ける。</p>
+
+      <h3>例の列挙から始める</h3>
+      <p>「AやB、Cといった〜は」と、例を並べて文や段落を始める形。読みにくいというより見飽きた部類なので、続くときに直す。言いたいことを先に書き、例はそのあとに回す。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p><del>書類の精読、契約情報との照合、不備判定といった確認の手間は、差戻しが発生しなかった申請でも同様にかかっています。</del></p></div>
+        <div class="row"><span class="mk">後</span><p><ins>差戻しが発生しなかった申請でも、書類の精読や契約情報との照合、不備判定の手間は同じようにかかっています。</ins></p></div>
+        <figcaption>例：レポピー原稿</figcaption>
+      </figure>
+
+      <h3>道案内</h3>
+      <p>「独自調査で、」の書き出しの連発、「4章の二段階目で」のような細かい章参照、「最後に〜を見ます」のような宣言、長い章冒頭の説明。読み手にとっては案内でなく雑音になる。「3章で見たとおり」程度の大きな参照は残してよい。</p>
+      <figure class="proof">
+        <div class="row"><span class="mk">前</span><p><del>独自調査で、</del>部門の負荷を生んでいる要因を尋ねると〜</p></div>
+        <div class="row"><span class="mk">後</span><p><ins>調査で</ins>部門の負荷を生んでいる要因を尋ねると〜</p></div>
+        <figcaption>例：ガイドブック原稿</figcaption>
+      </figure>
+    </section>
+
+    <!-- 表記 -->
+    <section id="notation">
+      <h2>IDEATECHの表記</h2>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>書く</th><th>書かない</th><th>補足</th></tr></thead>
+          <tbody>
+            <tr><td>推奨</td><td>推薦</td><td>AIが企業や製品を挙げることを指すとき</td></tr>
+            <tr><td>LLMO</td><td>AIO</td><td>IDEATECH発の資料すべて</td></tr>
+            <tr><td>当社フェローの北川</td><td>北川氏</td><td>IDEATECH発の原稿や告知では「氏」を付けない</td></tr>
+            <tr><td>5段階、5つの基準</td><td>五段階、五つの基準</td><td>段階や基準など、枠組みとして読ませる数</td></tr>
+            <tr><td>棚卸</td><td>棚卸し</td><td>調査の選択肢の文言は原文どおり</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 直しすぎ -->
+    <section id="overfix">
+      <h2>直しすぎに注意</h2>
+      <p>AIっぽさを消そうとして、別の不自然さを生むことがある。</p>
+      <h4>名詞中心の表現を、一律に動詞へ直さない</h4>
+      <p>ある原稿の「はじめに」にあった「法改正や雇用形態の多様化が加わるたびに」は、名詞中心の表現として直す候補に挙がった。ところが直した案のほうが不自然だったため、あえて残した。言い換えた結果と元の文を読み比べ、元のほうが自然なら戻す。</p>
+      <h4>型を全部は消さない</h4>
+      <p>否定から入る言い方やダッシュを一つ残らず消すと、文章の調子が平板になる。強調したい1か所は残す。</p>
+      <h4>言い換えで意味を変えない</h4>
+      <p>言い回しを整える途中で、主語と述語のねじれや、削った語の参照先の切れが入ることがある。直したあとにもう一度「見る順番」の1と2を確かめる。</p>
+    </section>
+
+    <!-- 分担 -->
+    <section id="roles">
+      <h2>AIと人の分担</h2>
+      <p>AIには直させるより、印を付けさせる。印には「どの型か」「読み手が何に困るか」を添えさせ、直すかどうかは人が決める。</p>
+      <ul>
+        <li>同じ型が1つの節に2回以上出たときに印を付ける。1回だけなら印を付けない。</li>
+        <li>数字の主語、見出しと本文、目次・リード文・変更点メモ、削った語の参照先はAIにも照合させる。最後は人が見る。</li>
+        <li>人が手を入れたあとも、もう一度、事実と構成を確かめる。言い回しを直した提出版のほうに、主述のねじれや目次とのずれが残った例がある。</li>
+        <li>温度感は書き手によって違う。どこまで残すかは、原稿ごとに担当者が判断する。</li>
+      </ul>
+    </section>
+
+    <!-- 理由 -->
+    <section id="why">
+      <h2>AIっぽくなる理由</h2>
+      <dl class="why">
+        <dt>確率の高い言葉を選ぶ</dt>
+        <dd>次に来る確率が高い言葉を一つずつ選ぶため、無難な言い回しや同じ文末に寄る。</dd>
+        <dt>評価されやすい書き方に寄せられている</dt>
+        <dd>要点が整理され、結論がはっきりした回答が高く評価されるよう調整されている。その結果、定義から入る、道案内をする、段落末で効用を約束するといった書き方が強くなる。</dd>
+        <dt>英語の型が残る</dt>
+        <dd>学習の中心は英語である。「構造（structure）」「打ち手（levers）」や It’s not A, it’s B. の型が日本語に移り、日本語では芝居がかって見える。</dd>
+        <dt>読み手の顔が見えない</dt>
+        <dd>相手が詳しいのか初めて読むのかわからないので、念押しや参照を足し、誰が読んでも迷わない方に倒す。</dd>
+        <dt>削る工程がない</dt>
+        <dd>人は書いたあとに読み返して削る。AIは頭から一度で書き切るため、その工程がない。</dd>
+      </dl>
+    </section>
+
+    <!-- チェックリスト -->
+    <section id="checklist" class="check">
+      <h2>提出前チェックリスト</h2>
+      <p class="muted">チェックの状態は、このブラウザの中だけに残る。</p>
+
+      <h3>1　事実と数字</h3>
+      <ul>
+        <li><label><input type="checkbox" data-k="f1"><span>数字の主語（人・企業・事業所）が調査概要と合っている</span></label></li>
+        <li><label><input type="checkbox" data-k="f2"><span>合計と内訳を足し算して一致する</span></label></li>
+        <li><label><input type="checkbox" data-k="f3"><span>「最多」「突出」などの評価語が数字と合っている</span></label></li>
+        <li><label><input type="checkbox" data-k="f4"><span>調査で示せないことまで言い切っていない</span></label></li>
+      </ul>
+      <h3>2　構成</h3>
+      <ul>
+        <li><label><input type="checkbox" data-k="c1"><span>目次・リード文・変更点メモの見出しが本文と一致している</span></label></li>
+        <li><label><input type="checkbox" data-k="c2"><span>削った語句が、残した文の参照先になっていない</span></label></li>
+        <li><label><input type="checkbox" data-k="c3"><span>用語を置き換えたら、章タイトル・表・本文で統一されている</span></label></li>
+      </ul>
+      <h3>3　見出し</h3>
+      <ul>
+        <li><label><input type="checkbox" data-k="h1"><span>見出しを拾い読みするだけで中身がわかる</span></label></li>
+        <li><label><input type="checkbox" data-k="h2"><span>比喩やカッコつけた言い方が入っていない</span></label></li>
+      </ul>
+      <h3>4　言い回し</h3>
+      <ul>
+        <li><label><input type="checkbox" data-k="w1"><span>段落末の「〜が不可欠です」「〜の鍵となります」が続いていない</span></label></li>
+        <li><label><input type="checkbox" data-k="w2"><span>同じ型が1つの節に2回以上出ていない</span></label></li>
+        <li><label><input type="checkbox" data-k="w3"><span>要所に短く言い切る文があり、長い文は主張が1つに絞られている</span></label></li>
+        <li><label><input type="checkbox" data-k="w4"><span>否定から入る言い方、ダッシュ、強調の引用符を、強調したい箇所に絞った</span></label></li>
+        <li><label><input type="checkbox" data-k="w6"><span>「効く」「刺さる」「響く」「置く」などを、起きる変化や具体的な動詞に置き換えた</span></label></li>
+        <li><label><input type="checkbox" data-k="w5"><span>推奨・LLMO・算用数字など、IDEATECHの表記に合っている</span></label></li>
+      </ul>
+      <div class="check-bar"><span id="count">0 / 15</span><button type="button" class="reset" id="reset">チェックを外す</button></div>
+    </section>
+
+    <!-- 関連 -->
+    <section id="related">
+      <h2>関連する社内文書</h2>
+      <p>このレギュレーションは、次の文書を使うときの順番と判断の基準を決めるものである。</p>
+      <ul>
+        <li>「AIっぽい文章とは？」　人向けの解説。AIっぽさの特徴と直し方</li>
+        <li>「AI文章 編集ルール（暫定版）」　白書の修正記録から作った、編集エージェント向けの手順</li>
+        <li>「白書の構成ルール（暫定版）」　章・節・段落の組み立て方</li>
+      </ul>
+      <p>文書どうしで方向が逆に見える箇所は、次の基準で判断する。</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>表現</th><th>使ってよい場合</th><th>直す場合</th></tr></thead>
+          <tbody>
+            <tr><td>問いかけ</td><td>読み手が実際に抱く疑問を先回りする</td><td>段落を始めるためだけに書いた問い</td></tr>
+            <tr><td>指示語（この・こうした）</td><td>指す先が1つに決まる</td><td>複数の事実をまとめて受ける。短文で溜めて受ける</td></tr>
+            <tr><td>否定から入る</td><td>読み手の思い込みを正す。1つの節に1回程度</td><td>比べる相手がいないのに否定から入る</td></tr>
+            <tr><td>引用符</td><td>実際の発言、選択肢の原文、本文で定義した用語</td><td>普通の言葉を目立たせるため</td></tr>
+            <tr><td>ダッシュ</td><td>厳選した1か所</td><td>挿入句や、後半を劇的に見せるため</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 今後 -->
+    <section id="next">
+      <h2>今後確かめること</h2>
+      <ul>
+        <li>文の長さの目安（平均60字前後、30字未満と100字超の文がどれくらいあるか）を、ほかの原稿でも測る。</li>
+        <li>全員に共通するルールと、書き手個人の好みを分ける。</li>
+        <li>見出しやキャッチコピーの決まりは、この版では扱っていない。</li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <p>改訂履歴　2026年10月28日　暫定版を作成。ガイドブック原稿、IDEAインサイトレポート、レポピー原稿の修正記録をもとにした。</p>
+  <p>改訂履歴　2026年10月28日　「効果をぼかす言葉」を追加し、本文中の「効く」「響く」を言い換えた。同日、「中核」「核心」「本質」「根幹」を概念語に加えた。白書の結論での「核心」の扱いと、長い文の使い方も追加した。さらに「場所や流れに見立てた動詞」（置く・流す）を追加し、本文中の「置く」を言い換えた。「論点」を概念語に加え、「論点」と「構造」を使ってよい場合を追記した。</p>
+</footer>
+
+<script>
+(function(){
+  // 目次：クリックでスクロール、現在地の表示
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a, details.toc-m a'));
+  links.forEach(function(a){
+    a.addEventListener('click', function(e){
+      var id = a.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if(!el) return;
+      e.preventDefault();
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block:'start'});
+      var d = a.closest('details'); if(d) d.open = false;
+    });
+  });
+  var side = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          side.forEach(function(a){ a.setAttribute('aria-current', a.getAttribute('href') === '#' + en.target.id ? 'true' : 'false'); });
+        }
+      });
+    }, {rootMargin:'-20% 0px -70% 0px'});
+    document.querySelectorAll('main section').forEach(function(s){ io.observe(s); });
+  }
+  // 開いたときに #見出し が付いていれば、その位置へ
+  try{
+    var h = location.hash.slice(1);
+    if(h && document.getElementById(h)) document.getElementById(h).scrollIntoView({block:'start'});
+  }catch(e){}
+
+  // チェックリスト（この閲覧者のブラウザだけに保存）
+  var KEY = 'ideatech-ai-writing-checklist';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.check input[type=checkbox]'));
+  var state = {};
+  try{ state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; }catch(e){ state = {}; }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+  function count(){
+    var n = boxes.filter(function(b){ return b.checked; }).length;
+    document.getElementById('count').textContent = n + ' / ' + boxes.length;
+  }
+  boxes.forEach(function(b){
+    b.checked = !!state[b.dataset.k];
+    b.addEventListener('change', function(){ state[b.dataset.k] = b.checked; save(); count(); });
+  });
+  document.getElementById('reset').addEventListener('click', function(){
+    boxes.forEach(function(b){ b.checked = false; }); state = {}; save(); count();
+  });
+  count();
+})();
+</script>
+</body>
+</html>
